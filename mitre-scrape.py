@@ -5,7 +5,7 @@ import sys
 
 # Method to download the raw screenshot results
 def downloadScreenshot(screenshot):
-	baseURL = 'https://attackevals.mitre.org/theme/images/'
+	baseURL = 'https://d1zq5d3dtjfcoj.cloudfront.net/'
 	fullURL = '%s%s' % (baseURL, screenshot)
 	print(fullURL)
 	response = requests.request("GET", fullURL)
