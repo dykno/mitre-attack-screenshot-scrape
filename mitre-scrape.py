@@ -19,6 +19,8 @@ if not os.path.exists('./output/'):
 for root, dirs, files in os.walk('./eval-json/'):
 	for file in files:
 		# Open each company's JSON result file
+		if file.startswith('.'):
+			continue
 		with open(os.path.join('./eval-json/%s') % file) as inputJson:
 			print("Opened %s" % file)
 			# Set the company name for later use
@@ -30,28 +32,32 @@ for root, dirs, files in os.walk('./eval-json/'):
 			if not os.path.exists('./output/%s' % companyName):
 				os.mkdir('./output/%s' % companyName)
 
+			techniques = data['Techniques']
 			# Loop through each entry in the file
-			for technique in data:
+			for technique in techniques:
 				# Set our ATT&CK technique name for future reference (used in file naming)
-				techniqueName = data[technique]
-
+				techniqueName = technique['TechniqueName'].replace('/', '')
 				try:
-
 					# Loop through each attack 'step' that was evaluated in relation to the technique
-					for step in data[technique]['Steps']:
-						# Gather each screenshot that was submitted for that step (steps can have multiple screenshots)
-						for screenshot in data[technique]['Steps'][step]['Screenshots']:
-							# Strip return characters because they existed in some places for an unknown reason
-							screenshot = screenshot.rstrip('\n')
-							# The JSON can contain blank screenshot names for an unknown reason which just cause problems
-							# Check if we already have the file to prevent overwriting
-							# Check if the screenshot name is blank to prevent creating useless files
-							if not screenshot == "" and not os.path.exists('./output/%s/%s-%s' % (companyName, technique, screenshot)):
-									# Make a request to download the raw screenshot
-									pngResponse = downloadScreenshot(screenshot)
+					for step in technique['Steps']:
+						# Loop through each detection within the step
+						for detection in step['Detections']:
+							# Loop through each screenshot submitted for that detection.
+							for screenshot in detection['Screenshots']:
+								# Strip return characters because they existed in some places for an unknown reason
+								screenshotObj = screenshot['ScreenshotName'].rstrip('\n')
+								# The JSON can contain blank screenshot names for an unknown reason which just cause problems
+								# Check if we already have the file to prevent overwriting
+								# Check if the screenshot name is blank to prevent creating useless files
+								if not screenshotObj == "" and not os.path.exists('./output/%s/%s-%s' % (companyName, techniqueName, screenshotObj)):
+										# Make a request to download the raw screenshot
+										pngResponse = downloadScreenshot(screenshotObj)
 
-									# Write the screenshot
-									with open('./output/%s/%s-%s' % (companyName, technique, screenshot), "wb") as outputPng:
-										outputPng.write(pngResponse.content)
+										# Write the screenshot
+										with open('./output/%s/%s-%s' % (companyName, techniqueName, screenshotObj), "wb") as outputPng:
+											outputPng.write(pngResponse.content)
+				except KeyError as e:
+					print('No screenshot detected for %s' % technique['TechniqueId'])
+				
 				except:
-					print(data[technique].strip(u'\xa9'))
+					print(technique.strip(u'\xa9'))
