@@ -22,7 +22,7 @@ for root, dirs, files in os.walk('./eval-json/'):
 		with open(os.path.join('./eval-json/%s') % file) as inputJson:
 			print("Opened %s" % file)
 			# Set the company name for later use
-			companyName = file.rstrip('.json')
+			companyName = file.rstrip('.json').split('.')[0]
 			# Load our JSON data
 			data = json.load(inputJson)
 
